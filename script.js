@@ -1,12 +1,12 @@
 // ===== KONFIGURASI FIREBASE =====
 const firebaseConfig = {
-  apiKey: "AIzaSyBFFvwzf2lqNReTOlaE0HCCfRtjhWTknqU",
-  authDomain: "eduquest-kids-3fb45.firebaseapp.com",
-  projectId: "eduquest-kids-3fb45",
-  storageBucket: "eduquest-kids-3fb45.firebasestorage.app",
-  messagingSenderId: "713992390520",
-  appId: "1:713992390520:web:b406722d9852d5827b2a8d",
-  measurementId: "G-FB2CLTW40J"
+    apiKey: "MASUKKAN_API_KEY_ANDA",
+    authDomain: "MASUKKAN_AUTH_DOMAIN_ANDA",
+    databaseURL: "MASUKKAN_DATABASE_URL_ANDA",
+    projectId: "MASUKKAN_PROJECT_ID_ANDA",
+    storageBucket: "MASUKKAN_STORAGE_BUCKET_ANDA",
+    messagingSenderId: "MASUKKAN_MESSAGING_SENDER_ID_ANDA",
+    appId: "MASUKKAN_APP_ID_ANDA"
 };
 
 // Inisialisasi Firebase Database
