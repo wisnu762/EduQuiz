@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduQuest - Live Animated Edition</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Fredoka & Poppins -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Canvas Confetti CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <!-- Import File CSS Eksternal -->
+    <link rel="stylesheet" href="style.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Poppins', 'sans-serif'],
+                        fredoka: ['Fredoka', 'cursive']
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="text-white flex flex-col justify-between min-h-screen" onclick="initAudio()">
+
+    <!-- Header Navigation -->
+    <header class="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 p-4 sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto flex justify-between items-center flex-wrap gap-2">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="switchView('view-landing')">
+                <div class="bg-gradient-to-r from-pink-500 to-rose-500 text-white font-fredoka px-3 py-1 text-xs rounded-full font-bold shadow-lg shadow-rose-500/20">
+                    
+                </div>
+                <span class="font-fredoka text-lg md:text-2xl font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-amber-400 to-yellow-500">
+                    EduQuest Kids
+                </span>
+            </div>
+            <div class="flex items-center gap-2">
+                <button id="bgm-toggle-btn" onclick="toggleBGM(event)" class="btn-modern bg-slate-800 hover:bg-slate-700 text-xs px-4 py-2.5 rounded-xl border border-slate-700 font-semibold flex items-center gap-2">
+                    <i class="fa-solid fa-volume-xmark text-amber-400"></i> Musik: Off
+                </button>
+                <button onclick="switchView('view-teacher-setup')" class="btn-modern bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-fredoka text-xs px-4 py-2.5 rounded-xl font-semibold shadow-lg shadow-indigo-500/30">
+                    <i class="fa-solid fa-chalkboard-user mr-1"></i> Mode Guru
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Game Container -->
+    <main class="max-w-6xl mx-auto p-4 flex-grow w-full flex items-center justify-center">
+
+        <!-- 1. BERANDA -->
+        <section id="view-landing" class="w-full py-6 text-center">
+            <div class="glass-panel p-8 md:p-12 max-w-lg mx-auto rounded-3xl relative overflow-hidden">
+                <div class="bg-amber-400/10 text-amber-300 font-fredoka text-xs px-4 py-1.5 rounded-full inline-block mb-6 border border-amber-400/30 font-semibold">
+                    ✨ Bermain, Belajar, dan Jadi Juara!
+                </div>
+
+                <div class="relative w-40 h-40 mx-auto mb-4 cursor-pointer group" onclick="triggerTouchReaction(event, this)">
+                    <img id="landing-avatar-preview" src="LogoEduQuest.png" class="w-full h-full object-contain anim-idle drop-shadow-2xl transition group-hover:scale-105" alt="Character Intro">
+                    <div class="char-shadow"></div>
+                    <div id="reaction-container-landing"></div>
+                </div>
+                <p class="text-[10px] text-slate-400 mb-4 italic">(Klik/Sentuh karakternya untuk melihat reaksinya!)</p>
+
+                <h1 class="font-fredoka text-2xl md:text-4xl text-white font-bold mb-2 tracking-wide">
+                    EDUQUEST
+                </h1>
+                <p class="text-xs md:text-sm text-slate-400 mb-8 max-w-xs mx-auto">
+                    Kuis edukasi seru dengan karakter hidup interaktif!
+                </p>
+
+                <div class="space-y-3 max-w-xs mx-auto font-fredoka">
+                    <button onclick="playClickSound(); startStudentFlow();" class="btn-modern w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-sm rounded-2xl font-bold shadow-lg shadow-emerald-500/30 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-play"></i> MULAI MAIN
+                    </button>
+                    <button onclick="playClickSound(); openModal('modal-tutorial');" class="btn-modern w-full py-3.5 bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 text-xs rounded-2xl font-semibold border border-slate-700">
+                        ❓ CARA BERMAIN
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. PEMILIHAN KARAKTER -->
+        <section id="view-character-select" class="w-full hidden">
+            <div class="glass-panel p-6 md:p-10 max-w-4xl mx-auto text-center rounded-3xl">
+                <h2 class="font-fredoka text-xl text-amber-400 font-bold mb-1">PILIH & SENTUH KARAKTERMU!</h2>
+                <p class="text-xs text-slate-400 mb-8">Klik pada karakter untuk melihat reaksi hidup mereka:</p>
+                
+                <div id="character-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-5 mb-8"></div>
+
+                <button onclick="playClickSound(); proceedToRoomJoin();" class="btn-modern font-fredoka bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white text-xs py-4 px-8 rounded-2xl font-bold shadow-lg shadow-blue-500/30">
+                    LANJUT MASUK ROOM ➔
+                </button>
+            </div>
+        </section>
+
+        <!-- 3. MASUK ROOM -->
+        <section id="view-join-room" class="w-full max-w-md mx-auto hidden">
+            <div class="glass-panel p-8 text-center rounded-3xl">
+                <h2 class="font-fredoka text-lg text-amber-400 font-bold mb-6">🔑 MASUKKAN KODE ROOM</h2>
+                
+                <div class="bg-slate-800/80 p-4 rounded-2xl border border-slate-700/50 mb-6 flex items-center justify-center gap-4 cursor-pointer group" onclick="triggerTouchReaction(event, this)">
+                    <div class="relative w-16 h-16 flex-shrink-0">
+                        <img id="selected-char-preview" src="luffy.png" class="w-full h-full object-contain anim-idle drop-shadow-md" alt="Karakter Terpilih">
+                        <div class="char-shadow" style="width: 80%; height: 8px;"></div>
+                        <div id="reaction-container-join"></div>
+                    </div>
+                    <div class="text-left">
+                        <div id="selected-char-name" class="font-fredoka text-sm text-white font-bold">Luffy</div>
+                        <div class="text-[11px] text-emerald-400 font-medium">Sentuh aku! 👆</div>
+                    </div>
+                </div>
+
+                <div class="space-y-4 text-left text-xs font-semibold">
+                    <div>
+                        <label class="block mb-2 text-slate-300">KODE ROOM (6 DIGIT):</label>
+                        <input type="text" id="input-room-code" maxlength="6" placeholder="123456" class="w-full text-center text-xl font-bold tracking-widest p-3.5 bg-slate-900 border border-slate-700 rounded-xl text-amber-400 focus:outline-none focus:border-amber-400 transition">
+                    </div>
+                    <div>
+                        <label class="block mb-2 text-slate-300">NAMA PEMAIN / KELOMPOK:</label>
+                        <input type="text" id="input-player-name" placeholder="Ketik nama kamu..." class="w-full p-3.5 bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-amber-400 transition">
+                    </div>
+                    <button onclick="playClickSound(); joinRoom();" class="btn-modern font-fredoka bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-xs w-full py-4 rounded-2xl font-bold shadow-lg shadow-emerald-500/30 mt-2">
+                        GABUNG SEKARANG!
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. LOBBY SISWA -->
+        <section id="view-student-lobby" class="w-full max-w-md mx-auto text-center hidden">
+            <div class="glass-panel p-10 rounded-3xl border-amber-500/30">
+                <div class="text-6xl mb-4 inline-block anim-idle">⏳</div>
+                <h2 class="font-fredoka text-base text-amber-400 font-bold mb-2">MENUNGGU GURU MEMULAI...</h2>
+                <p class="text-xs text-slate-400 mb-6">Perhatikan proyektor di depan kelas ya!</p>
+                <div class="bg-slate-900/80 p-4 rounded-2xl border border-slate-800 text-left space-y-2 text-xs font-medium">
+                    <div class="flex justify-between"><span class="text-slate-400">Kode Room:</span><span id="lobby-room-code" class="text-amber-400 font-bold">------</span></div>
+                    <div class="flex justify-between"><span class="text-slate-400">Pemain:</span><span id="lobby-player-name" class="text-white font-bold">-</span></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4.1 LOBBY GURU -->
+        <section id="view-teacher-lobby" class="w-full max-w-3xl mx-auto text-center hidden">
+            <div class="glass-panel p-8 rounded-3xl">
+                <div class="flex justify-between items-center mb-6 pb-4 border-b border-slate-800">
+                    <div class="text-left font-fredoka">
+                        <h2 class="text-lg text-indigo-400 font-bold">ROOM GURU (HOST)</h2>
+                        <p class="text-xs text-slate-400 mt-1">Mapel: <span id="host-subj-label" class="text-emerald-400 font-semibold">-</span> | Kelas <span id="host-class-label" class="text-emerald-400 font-semibold">-</span></p>
+                    </div>
+                    <div class="bg-amber-400/10 text-amber-300 px-4 py-2 rounded-2xl border border-amber-400/30 font-fredoka text-sm font-bold">
+                        KODE: <span id="teacher-room-code-display">------</span>
+                    </div>
+                </div>
+
+                <div class="mb-8">
+                    <h3 class="font-fredoka text-xs text-left text-slate-300 mb-3 font-semibold">PESERTA BERGABUNG (<span id="participant-count">0</span>):</h3>
+                    <div id="teacher-participant-list" class="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 bg-slate-900/60 rounded-2xl border border-slate-800 min-h-[120px] items-center">
+                        <div class="col-span-full text-xs text-slate-500 italic">Belum ada peserta bergabung...</div>
+                    </div>
+                </div>
+
+                <button onclick="playClickSound(); startQuizByTeacher();" class="btn-modern font-fredoka bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-xs w-full py-4 rounded-2xl font-bold shadow-lg shadow-emerald-500/30">
+                    ▶ MULAI KUIS SEKARANG!
+                </button>
+            </div>
+        </section>
+
+        <!-- 5. CONTROLLER HP SISWA -->
+        <section id="view-student-controller" class="w-full max-w-md mx-auto hidden">
+            <div class="glass-panel p-6 text-center rounded-3xl">
+                <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
+                    <div class="flex items-center gap-3 cursor-pointer" onclick="triggerTouchReaction(event, this)">
+                        <div class="relative w-10 h-10">
+                            <img id="ctrl-char-img" src="luffy.png" class="w-full h-full object-contain anim-idle">
+                            <div id="reaction-container-ctrl"></div>
+                        </div>
+                        <span id="ctrl-player-name" class="font-fredoka text-xs font-bold text-white">Pemain</span>
+                    </div>
+                    <div class="text-[11px] bg-slate-800 text-amber-400 px-3 py-1 rounded-xl border border-slate-700 font-bold">
+                        ROOM: <span id="ctrl-room-code">------</span>
+                    </div>
+                </div>
+
+                <div id="ctrl-status-banner" class="mb-4 p-3 bg-indigo-500/10 border border-indigo-500/30 rounded-2xl text-xs text-indigo-300 font-medium">
+                    👀 LIHAT SOAL DI PROYEKTOR UTAMA!
+                </div>
+
+                <!-- 4 TOMBOL SIMBOL PILIHAN SISWA -->
+                <div id="ctrl-buttons-container" class="grid grid-cols-2 gap-4 mb-4 font-fredoka text-xs">
+                    <button onclick="sendAnswer('A')" class="ctrl-btn btn-modern bg-gradient-to-br from-emerald-500 to-teal-600 text-white p-5 rounded-2xl flex flex-col items-center gap-2 shadow-lg shadow-emerald-500/20">
+                        <span class="text-3xl">🟦</span><span>(A) KOTAK</span>
+                    </button>
+                    <button onclick="sendAnswer('B')" class="ctrl-btn btn-modern bg-gradient-to-br from-rose-500 to-red-600 text-white p-5 rounded-2xl flex flex-col items-center gap-2 shadow-lg shadow-rose-500/20">
+                        <span class="text-3xl">🔺</span><span>(B) SEGITIGA</span>
+                    </button>
+                    <button onclick="sendAnswer('C')" class="ctrl-btn btn-modern bg-gradient-to-br from-sky-500 to-blue-600 text-white p-5 rounded-2xl flex flex-col items-center gap-2 shadow-lg shadow-sky-500/20">
+                        <span class="text-3xl">🔴</span><span>(C) LINGKARAN</span>
+                    </button>
+                    <button onclick="sendAnswer('D')" class="ctrl-btn btn-modern bg-gradient-to-br from-amber-400 to-orange-500 text-slate-950 p-5 rounded-2xl flex flex-col items-center gap-2 shadow-lg shadow-amber-400/20 font-bold">
+                        <span class="text-3xl">⭐</span><span>(D) BINTANG</span>
+                    </button>
+                </div>
+
+                <div id="ctrl-feedback" class="text-xs text-slate-400 font-medium">Pilih salah satu tombol di atas!</div>
+            </div>
+        </section>
+
+        <!-- 6. SETUP GURU & KELOLA SOAL DINAMIS -->
+        <section id="view-teacher-setup" class="w-full max-w-3xl mx-auto hidden">
+            <div class="glass-panel p-6 md:p-8 rounded-3xl space-y-6">
+                <div class="flex justify-between items-center border-b border-slate-800 pb-4">
+                    <div>
+                        <h2 class="font-fredoka text-base md:text-lg text-indigo-400 font-bold">PENGATURAN KUIS & BANK SOAL GURU</h2>
+                        <p class="text-xs text-slate-400">Atur mata pelajaran, kelas, dan kelola daftar soal kuis.</p>
+                    </div>
+                    <button onclick="playClickSound(); switchView('view-landing');" class="text-slate-400 hover:text-white text-sm">✖</button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-semibold">
+                    <div>
+                        <label class="block mb-2 text-slate-300">KELAS SD:</label>
+                        <select id="teacher-class-select" onchange="renderQuestionList()" class="w-full p-3 bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-indigo-400">
+                            <option value="1">Kelas 1 SD</option>
+                            <option value="2">Kelas 2 SD</option>
+                            <option value="3">Kelas 3 SD</option>
+                            <option value="4" selected>Kelas 4 SD</option>
+                            <option value="5">Kelas 5 SD</option>
+                            <option value="6">Kelas 6 SD</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block mb-2 text-slate-300">MATA PELAJARAN:</label>
+                        <select id="teacher-subject-select" onchange="renderQuestionList()" class="w-full p-3 bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-indigo-400">
+                            <option value="Matematika">Matematika</option>
+                            <option value="Bahasa Indonesia">Bahasa Indonesia</option>
+                            <option value="IPAS">IPAS (Sains & Sosial)</option>
+                            <option value="Seni Budaya">Seni Budaya & Prakarya (SBdP)</option>
+                            <option value="PJOK">PJOK (Olahraga & Kesehatan)</option>
+                            <option value="Pendidikan Pancasila">Pendidikan Pancasila</option>
+                            <option value="Bahasa Inggris">Bahasa Inggris</option>
+                            <option value="Informatika">Informatika / Komputer</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="border-t border-slate-800 pt-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-fredoka text-xs text-amber-400 font-bold uppercase tracking-wider">
+                            📋 Daftar Soal (<span id="question-count-badge">0</span> Soal)
+                        </h3>
+                        <button onclick="playClickSound(); openQuestionModal();" class="btn-modern bg-emerald-500 hover:bg-emerald-600 text-white text-xs px-3.5 py-2 rounded-xl font-bold flex items-center gap-1.5 shadow-md shadow-emerald-500/20">
+                            <i class="fa-solid fa-plus"></i> Tambah Soal
+                        </button>
+                    </div>
+
+                    <div id="teacher-question-list" class="space-y-3 max-h-60 overflow-y-auto pr-1">
+                        <div class="text-xs text-slate-500 text-center py-6 italic">Belum ada soal untuk kategori ini...</div>
+                    </div>
+                </div>
+
+                <div class="border-t border-slate-800 pt-4">
+                    <button onclick="playClickSound(); createRoom();" class="btn-modern font-fredoka bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white text-xs w-full py-4 rounded-2xl font-bold shadow-lg shadow-indigo-500/30">
+                        🚀 BUAT ROOM & LOBBY KUIS
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 7. TAMPILAN PROYEKTOR / TV -->
+        <section id="view-tv-display" class="w-full hidden">
+            <div class="glass-panel p-4 rounded-2xl mb-4 flex justify-between items-center text-xs font-semibold flex-wrap gap-2">
+                <div>ROOM: <span id="tv-room-code" class="text-amber-400 font-bold">------</span></div>
+                
+                <div class="flex items-center gap-3 bg-slate-900/90 px-4 py-1.5 rounded-xl border border-slate-800">
+                    <div class="flex items-center gap-1.5 text-emerald-400">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>Benar: <span id="tv-score-correct" class="font-bold text-sm">0</span></span>
+                    </div>
+                    <span class="text-slate-600">|</span>
+                    <div class="flex items-center gap-1.5 text-rose-400">
+                        <i class="fa-solid fa-circle-xmark"></i>
+                        <span>Salah: <span id="tv-score-wrong" class="font-bold text-sm">0</span></span>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <span>SOAL: <span id="tv-question-idx" class="text-indigo-400 font-bold">1</span>/<span id="tv-question-total">5</span></span>
+                    <div class="flex items-center gap-1 bg-slate-900/80 px-3 py-1 rounded-xl border border-slate-800 ml-2">
+                        <span>⏱️</span>
+                        <span id="tv-timer-num" class="text-rose-500 font-bold text-sm">20</span>s
+                    </div>
+                </div>
+            </div>
+
+            <div id="tv-quiz-container" class="glass-panel p-6 md:p-8 text-center mb-6 min-h-[220px] rounded-3xl flex flex-col justify-center items-center">
+                <span id="tv-subject-badge" class="font-fredoka text-xs text-emerald-400 mb-2 font-bold">Matematika - Kelas 4 SD</span>
+                
+                <!-- Gambar Lampiran Soal di TV -->
+                <div id="tv-image-container" class="hidden mb-4 max-w-xs md:max-w-md rounded-2xl overflow-hidden border border-slate-700 bg-slate-900/50 shadow-lg">
+                    <img id="tv-question-image" src="" class="max-h-48 md:max-h-56 object-contain w-full" alt="Gambar Soal">
+                </div>
+
+                <h2 id="tv-question-text" class="font-fredoka text-base md:text-xl text-white leading-relaxed font-semibold max-w-2xl">Memuat Soal...</h2>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 text-xs font-bold">
+                <div id="tv-opt-A" class="glass-panel bg-emerald-500/20 border-emerald-500/40 text-emerald-300 p-4 rounded-2xl flex items-center gap-3">
+                    <span class="text-2xl">🟦</span><span>A. <span id="tv-text-A">-</span></span>
+                </div>
+                <div id="tv-opt-B" class="glass-panel bg-rose-500/20 border-rose-500/40 text-rose-300 p-4 rounded-2xl flex items-center gap-3">
+                    <span class="text-2xl">🔺</span><span>B. <span id="tv-text-B">-</span></span>
+                </div>
+                <div id="tv-opt-C" class="glass-panel bg-sky-500/20 border-sky-500/40 text-sky-300 p-4 rounded-2xl flex items-center gap-3">
+                    <span class="text-2xl">🔴</span><span>C. <span id="tv-text-C">-</span></span>
+                </div>
+                <div id="tv-opt-D" class="glass-panel bg-amber-500/20 border-amber-500/40 text-amber-300 p-4 rounded-2xl flex items-center gap-3">
+                    <span class="text-2xl">⭐</span><span>D. <span id="tv-text-D">-</span></span>
+                </div>
+            </div>
+
+            <div id="tv-discussion-box" class="glass-panel bg-amber-400/10 border-amber-400/30 p-4 rounded-2xl hidden mb-6 text-xs">
+                <span class="font-bold text-amber-300">💡 PEMBAHASAN:</span> <span id="tv-discussion-text" class="text-slate-300">-</span>
+            </div>
+
+            <div class="flex justify-end">
+                <button id="btn-next-question" onclick="playClickSound(); nextQuestion();" class="btn-modern font-fredoka bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white text-xs py-3.5 px-6 rounded-2xl font-bold hidden">
+                    SOAL BERIKUTNYA ➔
+                </button>
+            </div>
+        </section>
+
+        <!-- 8. PODIUM JUARA -->
+        <section id="view-podium" class="w-full hidden text-center">
+            <div class="glass-panel p-8 max-w-2xl mx-auto rounded-3xl">
+                <h2 class="font-fredoka text-xl text-amber-400 font-bold mb-1">🏆 PODIUM JUARA 🏆</h2>
+                <p class="text-xs text-slate-400 mb-6">Selamat kepada pahlawan dengan nilai tertinggi hari ini!</p>
+
+                <div class="glass-panel bg-slate-900/80 p-4 rounded-2xl border border-slate-700 max-w-md mx-auto mb-8 grid grid-cols-3 gap-3 text-center">
+                    <div class="border-r border-slate-800">
+                        <div class="text-[11px] text-slate-400 font-medium">Total Soal</div>
+                        <div id="summary-total" class="font-fredoka text-base text-white font-bold mt-0.5">0</div>
+                    </div>
+                    <div class="border-r border-slate-800">
+                        <div class="text-[11px] text-emerald-400 font-medium">Benar</div>
+                        <div id="summary-correct" class="font-fredoka text-base text-emerald-400 font-bold mt-0.5">0</div>
+                    </div>
+                    <div>
+                        <div class="text-[11px] text-rose-400 font-medium">Salah</div>
+                        <div id="summary-wrong" class="font-fredoka text-base text-rose-400 font-bold mt-0.5">0</div>
+                    </div>
+                </div>
+
+                <div class="flex justify-center items-end gap-6 mb-8 h-72">
+                    <div class="w-1/3 flex flex-col items-center">
+                        <div class="relative w-16 h-16 mb-2 cursor-pointer" onclick="triggerTouchReaction(event, this)">
+                            <img id="podium-img-2" src="sasuke.png" class="w-full h-full object-contain anim-sway drop-shadow-lg">
+                            <div class="char-shadow" style="width: 80%; height: 8px;"></div>
+                        </div>
+                        <span id="podium-name-2" class="font-fredoka text-xs text-slate-300 mb-2 font-semibold">Sasuke</span>
+                        <div class="w-full bg-gradient-to-t from-slate-800 to-slate-700 border border-slate-600 rounded-t-2xl h-28 flex items-center justify-center font-fredoka text-sm font-bold text-slate-300 shadow-xl">🥈 2</div>
+                    </div>
+
+                    <div class="w-1/3 flex flex-col items-center">
+                        <div class="relative w-20 h-20 mb-2 cursor-pointer" onclick="triggerTouchReaction(event, this)">
+                            <img id="podium-img-1" src="luffy.png" class="w-full h-full object-contain anim-victory drop-shadow-2xl">
+                            <div class="char-shadow" style="width: 80%; height: 10px;"></div>
+                        </div>
+                        <span id="podium-name-1" class="font-fredoka text-sm text-amber-400 mb-2 font-bold">Luffy</span>
+                        <div class="w-full bg-gradient-to-t from-amber-600 to-amber-400 border border-amber-300 rounded-t-2xl h-44 flex items-center justify-center font-fredoka text-lg font-bold text-slate-950 shadow-2xl">👑 1</div>
+                    </div>
+
+                    <div class="w-1/3 flex flex-col items-center">
+                        <div class="relative w-16 h-16 mb-2 cursor-pointer" onclick="triggerTouchReaction(event, this)">
+                            <img id="podium-img-3" src="sukuna.png" class="w-full h-full object-contain anim-sway drop-shadow-lg">
+                            <div class="char-shadow" style="width: 80%; height: 8px;"></div>
+                        </div>
+                        <span id="podium-name-3" class="font-fredoka text-xs text-slate-300 mb-2 font-semibold">Sukuna</span>
+                        <div class="w-full bg-gradient-to-t from-amber-900 to-amber-800 border border-amber-700 rounded-t-2xl h-20 flex items-center justify-center font-fredoka text-sm font-bold text-amber-200 shadow-xl">🥉 3</div>
+                    </div>
+                </div>
+
+                <button onclick="playClickSound(); switchView('view-landing');" class="btn-modern font-fredoka bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white text-xs py-3.5 px-8 rounded-2xl font-bold">
+                    KEMBALI KE BERANDA
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL FORM EDIT/TAMBAH SOAL -->
+    <div id="modal-question" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden overflow-y-auto">
+        <div class="glass-panel p-6 max-w-xl w-full rounded-3xl text-xs space-y-4 my-8">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 id="modal-q-title" class="font-fredoka text-sm text-amber-400 font-bold">TAMBAH SOAL BARU</h3>
+                <button onclick="closeModal('modal-question')" class="text-slate-400 hover:text-white">✖</button>
+            </div>
+
+            <input type="hidden" id="q-edit-id">
+
+            <div>
+                <label class="block mb-1 text-slate-300 font-semibold">Pertanyaan / Soal:</label>
+                <textarea id="q-input-question" rows="2" placeholder="Tuliskan pertanyaan soal di sini..." class="w-full p-3 bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-amber-400"></textarea>
+            </div>
+
+            <div>
+                <label class="block mb-1.5 text-slate-300 font-semibold">Gambar Lampiran Soal (Opsional):</label>
+                
+                <input type="file" id="q-input-file" accept="image/*" onchange="handleImageUpload(event)" class="hidden">
+                
+                <div class="flex items-center gap-3">
+                    <button type="button" onclick="document.getElementById('q-input-file').click()" class="btn-modern bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 px-4 py-2.5 rounded-xl font-bold flex items-center gap-2 text-xs">
+                        <i class="fa-solid fa-folder-open text-amber-400"></i> Pilih Gambar dari File...
+                    </button>
+                    <span id="q-file-name-label" class="text-[11px] text-slate-400 italic truncate max-w-[200px]">Belum ada gambar dipilih</span>
+                </div>
+
+                <div id="q-preview-container" class="hidden mt-3 relative w-36 h-28 rounded-xl overflow-hidden border border-slate-700 bg-slate-900">
+                    <img id="q-preview-img" src="" class="w-full h-full object-cover">
+                    <button type="button" onclick="removeSelectedImage()" class="absolute top-1 right-1 bg-rose-600/90 text-white rounded-full w-6 h-6 flex items-center justify-center text-[10px] shadow-md hover:bg-rose-700" title="Hapus Gambar">
+                        ✖
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block mb-1 text-slate-300 font-semibold">Pilihan (A) Kotak:</label>
+                    <input type="text" id="q-input-optA" placeholder="Jawaban A" class="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-amber-400">
+                </div>
+                <div>
+                    <label class="block mb-1 text-slate-300 font-semibold">Pilihan (B) Segitiga:</label>
+                    <input type="text" id="q-input-optB" placeholder="Jawaban B" class="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-amber-400">
+                </div>
+                <div>
+                    <label class="block mb-1 text-slate-300 font-semibold">Pilihan (C) Lingkaran:</label>
+                    <input type="text" id="q-input-optC" placeholder="Jawaban C" class="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-amber-400">
+                </div>
+                <div>
+                    <label class="block mb-1 text-slate-300 font-semibold">Pilihan (D) Bintang:</label>
+                    <input type="text" id="q-input-optD" placeholder="Jawaban D" class="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-amber-400">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block mb-1 text-slate-300 font-semibold">Kunci Jawaban Benar:</label>
+                    <select id="q-input-answer" class="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-xl text-amber-400 font-bold focus:outline-none focus:border-amber-400">
+                        <option value="A">A (Kotak)</option>
+                        <option value="B">B (Segitiga)</option>
+                        <option value="C">C (Lingkaran)</option>
+                        <option value="D">D (Bintang)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block mb-1 text-slate-300 font-semibold">Pembahasan Singkat:</label>
+                    <input type="text" id="q-input-discussion" placeholder="Alasan jawaban benar..." class="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-amber-400">
+                </div>
+            </div>
+
+            <div class="flex gap-2 pt-2">
+                <button onclick="saveQuestion()" class="btn-modern font-fredoka bg-emerald-500 hover:bg-emerald-600 text-white w-full py-3 rounded-xl font-bold">SIMPAN SOAL</button>
+                <button onclick="closeModal('modal-question')" class="btn-modern font-fredoka bg-slate-800 hover:bg-slate-700 text-slate-300 w-1/3 py-3 rounded-xl font-semibold">BATAL</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Tutorial -->
+    <div id="modal-tutorial" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="glass-panel p-6 max-w-md w-full rounded-3xl text-xs">
+            <h3 class="font-fredoka text-base text-amber-400 font-bold mb-4">CARA BERMAIN</h3>
+            <ol class="list-decimal list-inside space-y-2 text-slate-300 leading-relaxed mb-6 font-medium">
+                <li>Klik/Sentuh karakter kapan saja untuk melihat reaksi hidupnya!</li>
+                <li>Masukkan Kode Room dari proyektor guru.</li>
+                <li>Jawab soal tepat waktu menggunakan 4 tombol simbol di layar HP!</li>
+            </ol>
+            <button onclick="playClickSound(); closeModal('modal-tutorial');" class="btn-modern font-fredoka bg-indigo-600 hover:bg-indigo-700 text-white w-full py-3 rounded-xl font-bold">MENGERTI!</button>
+        </div>
+    </div>
+
+    <!-- Import File JavaScript Eksternal -->
+    <script src="script.js"></script>
+</body>
+</html>
